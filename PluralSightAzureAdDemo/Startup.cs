@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace PluralSightAzureAdDemo
 {
@@ -31,6 +34,24 @@ namespace PluralSightAzureAdDemo
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddAuthentication(options=> {
+                //remote login will via OpenId
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+
+                //Local authentication will be via cookies
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            }
+            )
+            .AddOpenIdConnect(options =>
+            {
+                options.Authority = Configuration["AzureAd:Authority"];
+                options.ClientId = Configuration["AzureAd:clientId"];
+                options.ResponseType = OpenIdConnectResponseType.IdToken;
+                options.CallbackPath = "/auth/signin-callback";
+                options.SignedOutRedirectUri = @"https://localhost:44324/";//Configuration["AzureAd:SignedOutRedirectUri"];
+            })
+            .AddCookie();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -51,6 +72,7 @@ namespace PluralSightAzureAdDemo
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseAuthentication();
             app.UseCookiePolicy();
 
             app.UseMvc();

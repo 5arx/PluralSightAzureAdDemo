@@ -34,7 +34,18 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
+                        @if (User.Identity.IsAuthenticated) { 
+                            <li>Welcome @User.Identity.Name  !</li>
+                        }
+                        else{ 
+                            <li role="presentation"><a asp-controller="auth" asp-action="signin">Sign-In</a></li>
+                        }
                     </ul>
+                    @if (User.Identity.IsAuthenticated) { 
+                    <form method="post" asp-controller="Auth" asp-action="SignOut">
+                        <button type="submit" class="btn btn-primary">Sign Out</button>
+                    </form>
+                    }
                 </div>
             </div>
         </nav>
@@ -52,7 +63,7 @@
         </div>
     </footer>
 
-    <environment include="Development">
+    <environment include="Development"> 
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
     </environment>
